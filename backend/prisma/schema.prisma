@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  SCHEDULED
+  PICKEDUP
+  REPORT_GENERATED
+  COMPLETED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Family {
+  id        String    @id @default(cuid())
+  name      String?   // Optional family name
+  members   Patient[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Patient {
+  id        String         @id @default(cuid())
+  name      String
+  email     String?        @unique
+  phone     String?        @unique
+  password  String?        // In a real app, hash this
+  
+  rewardPoints Int           @default(0)
+  
+  // Profile Fields
+  whatsapp     String?
+  addressLine1 String?
+  addressLine2 String?
+  pincode      String?
+  dob          DateTime?
+  age          Int?
+  gender       String?
+  height       Float?         // in cm
+  weight       Float?         // in kg
+  
+  familyId  String?
+  relation  String?        // Relation to the main account holder (e.g., Self, Child, Spouse)
+
+  family    Family?        @relation(fields: [familyId], references: [id])
+  
+  orders        PatientOrder[] @relation("PatientOrders")
+  bookedOrders  PatientOrder[] @relation("BookedByOrders")
+  documents    HealthDocument[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model HealthDocument {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "HDFC Insurance Card"
+  type        String   // e.g., "INSURANCE", "PRESCRIPTION", "ID"
+  fileUrl     String   // Path to the file
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("health_documents")
+}
+
+model Test {
+  id          String         @id @default(cuid())
+  name        String
+  category    String
+  price       Float
+  description String?
+  orders      PatientOrder[] @relation("OrderToTest")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Lab {
+  id              String         @id @default(cuid())
+  name            String
+  address         String
+  password        String         @default("test1")
+  lat             Float?
+  lng             Float?
+  rating          Float          @default(4.5)
+  popularity      Int            @default(1)
+  discount        Int            @default(0)
+  nabl            Boolean        @default(true)
+  homeCollection  Boolean        @default(true)
+  orders          PatientOrder[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Coupon {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  discountPercent Int
+  description     String?
+  isActive        Boolean   @default(true)
+  expiryDate      DateTime?
+  createdAt       DateTime  @default(now())
+}
+
+model PatientOrder {
+  id              String      @id @default(cuid())
+  bookingId       String      @unique // e.g., BK-1001
+  userId          String      // Linked to the person for whom the test is booked
+  patient         Patient     @relation("PatientOrders", fields: [userId], references: [id])
+  bookedById      String?     // Linked to the person who made the booking (if different)
+  booker          Patient?    @relation("BookedByOrders", fields: [bookedById], references: [id])
+  labId           String?
+  lab             Lab?        @relation(fields: [labId], references: [id])
+  tests           Test[]      @relation("OrderToTest")
+  status          OrderStatus @default(SCHEDULED)
+  priority        Priority    @default(MEDIUM)
+  amountPaid      Float
+  appointmentDate DateTime    @default(now())
+  timeSlot        String?
+  reportUrl       String?
+  aiInsight       AIInsight?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@map("patient_orders")
+}
+
+model AIInsight {
+  id              String       @id @default(cuid())
+  orderId         String       @unique
+  order           PatientOrder @relation(fields: [orderId], references: [id])
+  
+  // Storing the structured JSON data
+  insightData     Json
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("ai_insights")
+}
+
+model Staff {
+  id         String   @id @default(cuid())
+  name       String
+  role       String
+  email      String   @unique
+  avatar     String?
+  department String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

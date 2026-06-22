@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* BookMyPathology Design System - All HSL */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 230 35% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 230 35% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 35% 12%;
+
+    /* Brand: deep navy blue */
+    --primary: 232 60% 22%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 232 70% 38%;
+
+    --secondary: 220 30% 96%;
+    --secondary-foreground: 232 60% 22%;
+
+    --muted: 220 25% 96%;
+    --muted-foreground: 230 15% 45%;
+
+    --accent: 45 100% 60%;
+    --accent-foreground: 232 60% 22%;
+
+    /* Soft pastel surfaces */
+    --surface-yellow: 48 95% 88%;
+    --surface-mint: 152 55% 86%;
+    --surface-pink: 350 80% 92%;
+    --surface-blue: 210 90% 90%;
+    --surface-peach: 22 90% 90%;
+    --surface-lavender: 250 60% 92%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 232 70% 38%;
+
+    --radius: 1rem;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(232 60% 22%) 0%, hsl(232 70% 32%) 100%);
+    --gradient-cta: linear-gradient(135deg, hsl(45 100% 60%), hsl(38 100% 55%));
+    --gradient-dark: linear-gradient(135deg, hsl(232 50% 14%), hsl(232 45% 20%));
+
+    /* Shadows */
+    --shadow-soft: 0 8px 30px -12px hsl(232 50% 20% / 0.15);
+    --shadow-card: 0 12px 40px -15px hsl(232 50% 20% / 0.18);
+    --shadow-glow: 0 20px 60px -20px hsl(45 100% 50% / 0.5);
+
+    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    @apply font-bold tracking-tight;
+  }
+
+  /* Custom Themed Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #161F5A;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgb(22, 31, 90, 0.5);
+    border: 3px solid hsl(220 30% 96%);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(22, 31, 90, 0.9);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(22, 31, 90, 0.5) hsl(220 30% 96%);
+  }
+}
+
+@layer components {
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s var(--transition-smooth), transform 0.8s var(--transition-smooth);
+  }
+  .reveal.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-shine::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.35), transparent);
+    transition: left 0.6s ease;
+  }
+  .btn-shine:hover::after {
+    left: 100%;
+  }
+
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .glow-ring {
+    box-shadow: 0 0 0 0 hsl(45 100% 60% / 0.6);
+    animation: glow-pulse 2.4s ease-out infinite;
+  }
+}
+
+@layer utilities {
+  .bg-gradient-hero { background: var(--gradient-hero); }
+  .bg-gradient-cta { background: var(--gradient-cta); }
+  .bg-gradient-dark { background: var(--gradient-dark); }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-glow { box-shadow: var(--shadow-glow); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes glow-pulse {
+  0% { box-shadow: 0 0 0 0 hsl(45 100% 60% / 0.55); }
+  70% { box-shadow: 0 0 0 18px hsl(45 100% 60% / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(45 100% 60% / 0); }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
