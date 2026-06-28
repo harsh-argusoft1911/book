@@ -5,10 +5,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
     "seed": "tsx prisma/seed.ts",
     "bot:migrate": "tsx src/pathology-bot/migrations/migrate.ts",
     "bot:rollback": "tsx src/pathology-bot/migrations/migrate.ts rollback",
     "bot:test": "tsx src/pathology-bot/tests/testMatcher.test.ts"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
