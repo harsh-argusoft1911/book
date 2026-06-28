@@ -39,16 +39,23 @@ router.get('/webhook', (req: Request, res: Response) => {
 
 // ── Incoming Messages (POST) ──────────────────────────────────────────────────
 router.post('/webhook', async (req: Request, res: Response) => {
+  console.log('[pathology-bot] Webhook POST received. Body:', JSON.stringify(req.body, null, 2));
+  
   // Always respond 200 immediately — Meta will retry if we don't
   res.sendStatus(200);
 
   const body = req.body as WAWebhookPayload;
-  if (body.object !== 'whatsapp_business_account') return;
+  if (body.object !== 'whatsapp_business_account') {
+    console.log('[pathology-bot] Ignoring non-whatsapp_business_account object:', body.object);
+    return;
+  }
 
   for (const entry of body.entry ?? []) {
     for (const change of entry.changes ?? []) {
       const value = change.value;
       const messages: WAIncomingMessage[] = value.messages ?? [];
+
+      console.log(`[pathology-bot] Processing ${messages.length} messages...`);
 
       for (const message of messages) {
         const phone = message.from; // WhatsApp number in E.164 format
@@ -61,8 +68,11 @@ router.post('/webhook', async (req: Request, res: Response) => {
         }
 
         try {
+          console.log(`[pathology-bot] Message from ${phone}: type=${message.type}, text="${message.text?.body ?? ''}"`);
           const currentSession = await getOrCreateSession(phone);
+          console.log(`[pathology-bot] Loaded session for ${phone}. State: ${currentSession.current_state}`);
           await handleMessage(currentSession, message);
+          console.log(`[pathology-bot] Message processed successfully for ${phone}`);
         } catch (err) {
           console.error(`[pathology-bot] Error processing message from ${phone}:`, err);
           // Don't crash the server — errors are per-session, not global
