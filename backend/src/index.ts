@@ -36,6 +36,9 @@ import aiRoutes from './routes/ai';
 import authRoutes from './routes/auth';
 import documentRoutes from './routes/documents';
 
+// ── Pathology Bot (isolated module — toggle via env flag) ──────────────────────
+import pathologyBotRouter from './pathology-bot/webhook';
+
 
 
 
@@ -49,6 +52,12 @@ app.use('/api/family', familyRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
+
+// ── Pathology Bot: mount only when PATHOLOGY_BOT_ENABLED=true ─────────────────
+if (process.env.PATHOLOGY_BOT_ENABLED === 'true') {
+  app.use('/pathology-bot', pathologyBotRouter);
+  console.log('[pathology-bot] Module enabled at /pathology-bot');
+}
 
 // Serve frontend in production
 const frontendDist = path.join(process.cwd(), '..', 'frontend', 'dist');

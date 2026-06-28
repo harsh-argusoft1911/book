@@ -43,3 +43,6 @@ backend/uploads/*
 !backend/uploads/.gitkeep
 backend/uploads/documents/*
 !backend/uploads/documents/.gitkeep
+
+# Cloudflare tunnel binary
+backend/cloudflared
