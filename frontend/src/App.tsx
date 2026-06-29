@@ -27,6 +27,7 @@ import PathologyBookings from "./pages/pathology/PathologyBookings";
 import PathologyWalkin from "./pages/pathology/PathologyWalkin";
 import PathologyManage from "./pages/pathology/PathologyManage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 
 const queryClient = new QueryClient();
@@ -71,6 +72,11 @@ const App = () => (
               <Route path="inventory" element={<div className="p-8">Inventory Management (Coming Soon)</div>} />
               <Route path="settings" element={<div className="p-8">Pathology Settings (Coming Soon)</div>} />
             </Route>
+          </Route>
+
+          {/* Admin Routes (Protected) */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/admin" element={<AdminDashboard />} />
           </Route>
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

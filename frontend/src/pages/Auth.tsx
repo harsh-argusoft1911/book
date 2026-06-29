@@ -106,8 +106,13 @@ const Auth = () => {
           password: formData.password 
         });
         localStorage.setItem('user', JSON.stringify(response.data));
-        toast.success(`Welcome back, ${response.data.name}!`);
-        navigate(`/patient/${response.data.id}`);
+        if (response.data.role === 'admin') {
+          toast.success("Welcome back, Admin!");
+          navigate("/admin");
+        } else {
+          toast.success(`Welcome back, ${response.data.name}!`);
+          navigate(`/patient/${response.data.id}`);
+        }
       } else {
         if (!formData.labId || !formData.password) {
           toast.error("Please fill all fields");

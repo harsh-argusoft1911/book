@@ -18,12 +18,17 @@ const ProtectedRoute = () => {
     // Role-based route protection
     const isPatientRoute = location.pathname.startsWith('/patient');
     const isPathologyRoute = location.pathname.startsWith('/pathology');
+    const isAdminRoute = location.pathname.startsWith('/admin');
 
     if (isPatientRoute && user.role !== 'patient') {
       return <Navigate to="/login" replace />;
     }
 
     if (isPathologyRoute && user.role !== 'lab') {
+      return <Navigate to="/login" replace />;
+    }
+
+    if (isAdminRoute && user.role !== 'admin') {
       return <Navigate to="/login" replace />;
     }
 

@@ -66,6 +66,14 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { phone, password } = req.body;
+
+    // Check for admin credentials first
+    const adminPhone = process.env.ADMIN_PHONE || '9999999999';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'adminpassword';
+    if (phone === adminPhone && password === adminPassword) {
+      return res.json({ id: 'admin', name: 'Super Admin', phone: adminPhone, role: 'admin' });
+    }
+
     const patient = await prisma.patient.findUnique({
       where: { phone }
     });
@@ -95,6 +103,23 @@ router.post('/lab/login', async (req, res) => {
     res.json({ ...lab, role: 'lab' });
   } catch (error) {
     res.status(500).json({ error: 'Lab login failed' });
+  }
+});
+
+// Admin Login
+router.post('/admin/login', async (req, res) => {
+  try {
+    const { phone, password } = req.body;
+    const adminPhone = process.env.ADMIN_PHONE || '9999999999';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'adminpassword';
+
+    if (phone !== adminPhone || password !== adminPassword) {
+      return res.status(401).json({ error: 'Invalid admin phone number or password' });
+    }
+
+    res.json({ id: 'admin', name: 'Super Admin', phone: adminPhone, role: 'admin' });
+  } catch (error) {
+    res.status(500).json({ error: 'Admin login failed' });
   }
 });
 
