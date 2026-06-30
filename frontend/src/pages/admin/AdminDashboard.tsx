@@ -17,7 +17,12 @@ import {
   Star, 
   Percent, 
   PlusCircle, 
-  ArrowUpRight 
+  ArrowUpRight,
+  MapPin,
+  Calendar,
+  Filter,
+  CheckCircle,
+  Clock
 } from "lucide-react";
 import { 
   BarChart, 
@@ -42,10 +47,14 @@ const AdminDashboard = () => {
   const user = userStr ? JSON.parse(userStr) : null;
 
   // Layout & Navigation State
-  const [activeTab, setActiveTab] = useState<"financial" | "marketing" | "add_labs" | "view_labs">("financial");
+  const [activeTab, setActiveTab] = useState<"financial" | "locations" | "marketing" | "add_labs" | "view_labs">("financial");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+
+  // Filters
+  const [selectedLocation, setSelectedLocation] = useState("All");
+  const [selectedDays, setSelectedDays] = useState("7");
 
   // Data States
   const [analytics, setAnalytics] = useState<any>(null);
@@ -83,7 +92,12 @@ const AdminDashboard = () => {
   const fetchAnalytics = async () => {
     try {
       setAnalyticsLoading(true);
-      const res = await apiClient.get("/analytics/admin");
+      const res = await apiClient.get("/analytics/admin", {
+        params: {
+          location: selectedLocation,
+          days: selectedDays
+        }
+      });
       setAnalytics(res.data);
     } catch (err) {
       toast.error("Failed to load global analytics");
@@ -118,6 +132,9 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchAnalytics();
+  }, [selectedLocation, selectedDays]);
+
+  useEffect(() => {
     fetchCoupons();
     fetchLabs();
   }, []);
@@ -196,6 +213,7 @@ const AdminDashboard = () => {
 
   const menuItems = [
     { id: "financial", icon: DollarSign, label: "Financial Overview" },
+    { id: "locations", icon: MapPin, label: "Location Analytics" },
     { id: "marketing", icon: MarketingIcon, label: "Marketing Portal" },
     { id: "add_labs", icon: PlusSquare, label: "Register Partner Lab" },
     { id: "view_labs", icon: Beaker, label: "Partner Labs Directory" }
@@ -356,7 +374,52 @@ const AdminDashboard = () => {
           
           {/* TAB 1: FINANCIAL OVERVIEW */}
           {activeTab === "financial" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              
+              {/* Filter Toolbar */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800">Dashboard Scope Filters</h3>
+                  <p className="text-xs text-slate-500">Filter analytics by patient location and date range.</p>
+                </div>
+                <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+                  {/* Location Filter */}
+                  <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 w-full sm:w-auto">
+                    <MapPin size={16} className="text-slate-400 mr-2" />
+                    <span className="text-slate-400 mr-2 font-medium">City:</span>
+                    <select
+                      value={selectedLocation}
+                      onChange={(e) => setSelectedLocation(e.target.value)}
+                      className="bg-transparent border-none outline-none font-bold text-slate-800 cursor-pointer"
+                    >
+                      <option value="All">All Cities</option>
+                      <option value="Lucknow">Lucknow</option>
+                      <option value="Noida">Noida</option>
+                      <option value="Delhi">Delhi</option>
+                      <option value="Mumbai">Mumbai</option>
+                      <option value="Bangalore">Bangalore</option>
+                      <option value="Kanpur">Kanpur</option>
+                    </select>
+                  </div>
+
+                  {/* Date Filter */}
+                  <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 w-full sm:w-auto">
+                    <Calendar size={16} className="text-slate-400 mr-2" />
+                    <span className="text-slate-400 mr-2 font-medium">Period:</span>
+                    <select
+                      value={selectedDays}
+                      onChange={(e) => setSelectedDays(e.target.value)}
+                      className="bg-transparent border-none outline-none font-bold text-slate-800 cursor-pointer"
+                    >
+                      <option value="1">Today</option>
+                      <option value="7">Last 7 Days</option>
+                      <option value="30">Last 30 Days</option>
+                      <option value="all">All Time</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
               {analyticsLoading ? (
                 <div className="flex items-center justify-center h-[300px]">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -395,12 +458,14 @@ const AdminDashboard = () => {
                     })}
                   </div>
 
-                  {/* Charts & Top Labs */}
+                  {/* Charts & Rankings */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Revenue Chart */}
                     <Card className="lg:col-span-2 border-none shadow-soft">
                       <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-lg font-bold text-slate-800">Global Gross Revenue (Last 7 Days)</CardTitle>
+                        <CardTitle className="text-lg font-bold text-slate-800">
+                          Gross Revenue (Last {selectedDays === "all" ? "All Time" : `${selectedDays} Days`})
+                        </CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <div className="h-[300px] w-full">
@@ -442,8 +507,8 @@ const AdminDashboard = () => {
                                 {analytics?.earningsData.map((entry: any, index: number) => (
                                   <Cell 
                                     key={`cell-${index}`} 
-                                    fill={index === 6 ? '#4f46e5' : '#818cf8'} 
-                                    fillOpacity={index === 6 ? 1 : 0.6}
+                                    fill={index === analytics?.earningsData.length - 1 ? '#4f46e5' : '#818cf8'} 
+                                    fillOpacity={index === analytics?.earningsData.length - 1 ? 1 : 0.6}
                                   />
                                 ))}
                               </Bar>
@@ -453,6 +518,42 @@ const AdminDashboard = () => {
                       </CardContent>
                     </Card>
 
+                    {/* Booking Pipeline (Order Status Breakdown) */}
+                    <Card className="border-none shadow-soft">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-800">Booking Pipeline</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-5">
+                        {["SCHEDULED", "PICKEDUP", "REPORT_GENERATED", "COMPLETED"].map((status) => {
+                          const item = analytics?.orderStatusStats.find((s: any) => s.status === status);
+                          const count = item ? item.count : 0;
+                          const label = status === "SCHEDULED" ? "Scheduled / Confirmed" :
+                                        status === "PICKEDUP" ? "Sample Collected" :
+                                        status === "REPORT_GENERATED" ? "Report Ready" : "Completed";
+                          const color = status === "SCHEDULED" ? "bg-blue-500" :
+                                        status === "PICKEDUP" ? "bg-amber-500" :
+                                        status === "REPORT_GENERATED" ? "bg-indigo-500" : "bg-emerald-500";
+                          const totalOrdersValue = analytics?.stats[0]?.value ? parseInt(analytics.stats[0].value.replace(/,/g, '')) : 1;
+                          const percentage = Math.min(100, Math.round((count / (totalOrdersValue || 1)) * 100)) || 0;
+
+                          return (
+                            <div key={status} className="space-y-2">
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="font-bold text-slate-700">{label}</span>
+                                <span className="font-black text-slate-900">{count} ({percentage}%)</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div className={cn("h-full rounded-full", color)} style={{ width: `${percentage}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Top Partner Labs & Recent Bookings */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Top Performing Labs */}
                     <Card className="border-none shadow-soft">
                       <CardHeader className="pb-2">
@@ -478,13 +579,220 @@ const AdminDashboard = () => {
                         )}
                       </CardContent>
                     </Card>
+
+                    {/* Recent Bookings Feed */}
+                    <Card className="lg:col-span-2 border-none shadow-soft">
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle className="text-lg font-bold text-slate-800">Recent Customer Bookings</CardTitle>
+                        <span className="text-xs text-slate-400 font-bold">Latest 5 events</span>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="border-b border-slate-100 text-slate-400 text-xs uppercase font-bold tracking-wider">
+                                <th className="py-3 px-4">Booking ID</th>
+                                <th className="py-3 px-4">Patient</th>
+                                <th className="py-3 px-4">Partner Lab</th>
+                                <th className="py-3 px-4">Amount</th>
+                                <th className="py-3 px-4">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50 text-sm font-semibold text-slate-700">
+                              {analytics?.recentBookings.map((b: any) => (
+                                <tr key={b.id} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="py-3 px-4 font-black text-slate-800">{b.bookingId}</td>
+                                  <td className="py-3 px-4">
+                                    <div>
+                                      <div className="font-bold text-slate-800">{b.patientName}</div>
+                                      <div className="text-[10px] text-slate-500 font-medium">{b.patientPhone}</div>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-slate-600">{b.labName}</td>
+                                  <td className="py-3 px-4 text-slate-900 font-bold">₹{b.amountPaid.toLocaleString()}</td>
+                                  <td className="py-3 px-4">
+                                    <span className={cn(
+                                      "px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider",
+                                      b.status === "SCHEDULED" && "bg-blue-50 text-blue-600 border-blue-100",
+                                      b.status === "PICKEDUP" && "bg-amber-50 text-amber-600 border-amber-100",
+                                      b.status === "REPORT_GENERATED" && "bg-indigo-50 text-indigo-600 border-indigo-100",
+                                      b.status === "COMPLETED" && "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                    )}>
+                                      {b.status.replace("_", " ")}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                              {(!analytics?.recentBookings || analytics?.recentBookings.length === 0) && (
+                                <tr>
+                                  <td colSpan={5} className="text-center text-slate-400 py-6">No recent bookings found matching filters.</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </>
               )}
             </div>
           )}
 
-          {/* TAB 2: MARKETING PORTAL */}
+          {/* TAB 2: LOCATION ANALYTICS */}
+          {activeTab === "locations" && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              
+              {/* Filter Toolbar */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800">City Scope Filter</h3>
+                  <p className="text-xs text-slate-500">Select a specific city to filter the local analysis.</p>
+                </div>
+                <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 w-full sm:w-auto">
+                  <MapPin size={16} className="text-slate-400 mr-2" />
+                  <span className="text-slate-400 mr-2 font-medium">City:</span>
+                  <select
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    className="bg-transparent border-none outline-none font-bold text-slate-800 cursor-pointer"
+                  >
+                    <option value="All">All Cities</option>
+                    <option value="Lucknow">Lucknow</option>
+                    <option value="Noida">Noida</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Bangalore">Bangalore</option>
+                    <option value="Kanpur">Kanpur</option>
+                  </select>
+                </div>
+              </div>
+
+              {analyticsLoading ? (
+                <div className="flex items-center justify-center h-[300px]">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Location Distribution Bar Chart */}
+                    <Card className="lg:col-span-2 border-none shadow-soft">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-800">Customer Distribution by City</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-4">
+                        <div className="h-[300px] w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={analytics?.locationStats}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                              <XAxis 
+                                dataKey="city" 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                                dy={10}
+                              />
+                              <YAxis 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                              />
+                              <Tooltip 
+                                cursor={{ fill: '#f8fafc' }}
+                                content={({ active, payload }) => {
+                                  if (active && payload && payload.length) {
+                                    return (
+                                      <div className="bg-white p-4 rounded-xl shadow-xl border border-slate-100">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{payload[0].payload.city}</p>
+                                        <p className="text-lg font-bold text-primary">{payload[0].value} Patients</p>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                }}
+                              />
+                              <Bar 
+                                dataKey="count" 
+                                radius={[6, 6, 0, 0]} 
+                                barSize={40}
+                              >
+                                {analytics?.locationStats.map((entry: any, index: number) => {
+                                  const isLucknow = entry.city.toLowerCase() === 'lucknow';
+                                  return (
+                                    <Cell 
+                                      key={`cell-${index}`} 
+                                      fill={isLucknow ? '#7c3aed' : '#3b82f6'} 
+                                      fillOpacity={1}
+                                    />
+                                  );
+                                })}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* City Table and spotlight on Lucknow */}
+                    <Card className="border-none shadow-soft">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-800">City Standings</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="p-4 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest">Lucknow Spotlight</span>
+                            <h4 className="font-bold text-slate-800 text-base mt-1">Lucknow Region</h4>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-2xl font-black text-purple-700">
+                              {analytics?.locationStats.find((s: any) => s.city.toLowerCase() === 'lucknow')?.count || 0}
+                            </span>
+                            <p className="text-[10px] text-slate-500 font-bold">Total Patients</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 mt-4">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">City Leaderboard</label>
+                          {analytics?.locationStats.map((item: any) => (
+                            <div key={item.city} className="flex justify-between items-center py-2 border-b border-slate-50 text-sm font-semibold text-slate-700">
+                              <span className="flex items-center gap-2">
+                                <MapPin size={14} className={cn(item.city.toLowerCase() === 'lucknow' ? "text-purple-500" : "text-slate-400")} />
+                                {item.city}
+                              </span>
+                              <span className="font-bold text-slate-900">{item.count} Patients</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Pincode Distribution */}
+                  <Card className="border-none shadow-soft mt-6">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold text-slate-800">Pincode Density (Top Areas)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                        {analytics?.pincodeStats.map((item: any) => (
+                          <div key={item.pincode} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                            <div className="text-lg font-black text-slate-800">{item.pincode}</div>
+                            <div className="text-xs font-bold text-slate-500 mt-1">{item.count} Patients</div>
+                          </div>
+                        ))}
+                        {(!analytics?.pincodeStats || analytics?.pincodeStats.length === 0) && (
+                          <div className="col-span-4 text-center text-slate-400 py-6 text-sm">No pincode stats available.</div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: MARKETING PORTAL */}
           {activeTab === "marketing" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -608,7 +916,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* TAB 3: REGISTER PARTNER LAB */}
+          {/* TAB 4: REGISTER PARTNER LAB */}
           {activeTab === "add_labs" && (
             <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Card className="border-none shadow-soft">
@@ -716,7 +1024,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* TAB 4: PARTNER LABS GOD VIEW */}
+          {/* TAB 5: PARTNER LABS GOD VIEW */}
           {activeTab === "view_labs" && (
             <LabsMapView />
           )}
@@ -727,7 +1035,7 @@ const AdminDashboard = () => {
   );
 };
 
-// Simple Marketing Icon component since it's not a direct export in some Lucide versions
+// Simple Marketing Icon component
 const MarketingIcon = (props: any) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
